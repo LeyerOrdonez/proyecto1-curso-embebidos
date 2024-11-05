@@ -1,0 +1,26 @@
+----------para sensor DHT22
+
+#include <DHT.h>
+#include <DHT_U.h>
+#include <Adafruit_Sensor.h>
+
+#define DHTPIN 4         // Pin donde está conectado el DHT22
+#define DHTTYPE DHT22
+
+DHT dht(DHTPIN, DHTTYPE);
+
+{setup}
+ dht.begin();
+
+ {loop}
+    float h = dht.readHumidity();
+    float t = dht.readTemperature();
+
+     // Comprobar si la lectura es válida
+    if (isnan(h) || isnan(t)) {
+        Serial.println("Error leyendo el DHT22");
+        return;
+    }
+
+{libs}
+adafruit/DHT sensor library@^1.4.6
