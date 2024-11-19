@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapa con Puntos</title>
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        #map {
+            height: 100vh; /* Altura completa del mapa */
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Datos de puntos
+        const points = [
+            { "lat": 4.065512, "long": -76.202049, "lvl": 8, "rnd": "1" },
+            { "lat": 4.066541, "long": -76.201332, "lvl": 7, "rnd": "1" },
+            { "lat": 4.066319, "long": -76.200645, "lvl": 7, "rnd": "1" },
+            { "lat": 4.066455, "long": -76.201088, "lvl": 6, "rnd": "2" },
+            { "lat": 4.066273, "long": -76.200729, "lvl": 6, "rnd": "2" },
+            { "lat": 4.066214, "long": -76.200607, "lvl": 6, "rnd": "2" },
+            { "lat": 4.065850, "long": -76.199699, "lvl": 7, "rnd": "2" },
+            { "lat": 4.066310, "long": -76.200684, "lvl": 6, "rnd": "2" },
+            { "lat": 4.066448, "long": -76.200905, "lvl": 7, "rnd": "2" },
+            { "lat": 4.065728, "long": -76.199638, "lvl": 6, "rnd": "3" },
+            {"lat": 4.092672, "long": -76.198387, "lvl": 8, "rnd": "1"},
+            {"lat": 4.092672, "long": -76.198387, "lvl": 9, "rnd": "1"},
+            {"lat": 4.092672, "long": -76.198387, "lvl": 6, "rnd": "1"},
+            {"lat": 4.092672, "long": -76.198387, "lvl": 6, "rnd": "1"},
+            {"lat": 4.093283, "long": -76.198494, "lvl": 7, "rnd": "1"},
+            {"lat": 4.093821, "long": -76.198692, "lvl": 6, "rnd": "1"},
+            {"lat": 4.093833, "long": -76.198715, "lvl": 7, "rnd": "1"},
+            {"lat": 4.093782, "long": -76.198967, "lvl": 7, "rnd": "1"},
+            {"lat": 4.093782, "long": -76.198967, "lvl": 7, "rnd": "1"},
+            {"lat": 4.093776, "long": -76.199097, "lvl": 9, "rnd": "1"}
+        ];
+
+        // Función para asignar color según el nivel (lvl)
+        function getColor(lvl) {
+            if (lvl >= 8) return "red"; // Nivel alto
+            if (lvl >= 6) return "yellow"; // Nivel medio
+            return "green"; // Nivel bajo
+        }
+
+        // Crear el mapa
+        const map = L.map('map').setView([4.065512, -76.202049], 15);
+
+        // Añadir capa de OpenStreetMap
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // Añadir puntos al mapa
+        points.forEach(point => {
+            const marker = L.circleMarker([point.lat, point.long], {
+                radius: 10, // Tamaño del marcador
+                color: getColor(point.lvl), // Color del borde
+                fillColor: getColor(point.lvl), // Color del relleno
+                fillOpacity: 0.8, // Opacidad del relleno
+                weight: 1 // Grosor del borde
+            }).addTo(map);
+
+            // Añadir etiqueta emergente con el valor de "rnd"
+            marker.bindPopup(`Nivel: ${point.lvl}<br> posicion: ${point.rnd}`);
+        });
+    </script>
+</body>
+</html>

@@ -4,8 +4,15 @@
 #include <Adafruit_SSD1306.h>    // Para la pantalla OLED
 #include <TinyGPSPlus.h>         // para el modulo gps
 #include <SoftwareSerial.h>      // para ampliar los tx y rx en esp32
+#include <WiFi.h>                
+#include <HTTPClient.h>
 
 // Definición de parámetros generales
+
+const char* ssid = "FAMV";           //para el wifi
+const char* password = "Andres77";   
+const int size = 40;
+
 #define SCREEN_WIDTH 128    //tamaño de pantall ancho
 #define SCREEN_HEIGHT 64    //taaño de pantalla alto
 #define OLED_RESET    -1    // -1 oled = no reset
@@ -14,7 +21,7 @@ int buttonPin2 = 17;  // activar switch 2 ronda
 int buttonPin3 = 5;   // para activar siwtch 3 ronda
 int buttonPin4 = 18;  //  para enviar los datos, aun no se sabe donde
 
-String globalArray[20];
+String globalArray[size];
 int i = 0;
 
 
@@ -58,6 +65,21 @@ void setup() {
     }
     display.println("- MPU6050 listo!");
 
+
+    Serial.println("Conectando al WiFi...");
+     // Conectar al WiFi
+    WiFi.begin(ssid, password);
+    // Espera hasta que se conecte
+    while (WiFi.status() != WL_CONNECTED) {
+    delay(1000);
+    Serial.print(".");
+    }
+
+  // Imprime la IP asignada
+    Serial.println();
+    Serial.println("Conectado al WiFi!");
+    Serial.print("Dirección IP: ");
+    Serial.println(WiFi.localIP());
     display.display();
     delay(3000);
    
@@ -106,13 +128,13 @@ void leer_datos(int buttonPin, int ronda){
     int movimientoBrusco = calcularEscalaDeMovimiento(accelMagnitude);
 
 
-    if(movimientoBrusco > 5){
+    if(movimientoBrusco > 4){
 
-        if(i !=20){
+        if(i !=size){
         globalArray[i] = "{";
-        globalArray[i] += "\"lat\": " + String(latitude, 6) + ", ";
-        globalArray[i] += "\"long\": " + String(longitude, 6) + ", ";
-        globalArray[i] += "\"lvl\": " + String(movimientoBrusco) + ", ";
+        globalArray[i] += "\"lat\": \"" + String(latitude, 6) + "\", ";
+        globalArray[i] += "\"long\": \"" + String(longitude, 6) + "\", ";
+        globalArray[i] += "\"lvl\": \"" + String(movimientoBrusco) + "\", ";
         globalArray[i] += "\"rnd\": \"" + String(ronda) + "\"";
         globalArray[i] += "}";
         }
@@ -140,7 +162,7 @@ void leer_datos(int buttonPin, int ronda){
 
     display.setCursor(0,50);
     display.print("puntos restan:");
-    display.println(20-i);
+    display.println(size-i);
     display.display();
     display.clearDisplay();
     delay(100);
@@ -153,6 +175,50 @@ void leer_datos(int buttonPin, int ronda){
     display.display();
     delay(2000);
 
+}
+
+void enviarDatos() {
+    HTTPClient http;
+
+    WiFi.begin(ssid, password);
+    // Espera hasta que se conecte
+    while (WiFi.status() != WL_CONNECTED) {
+    delay(1000);
+    Serial.print(".");
+    }
+
+    display.clearDisplay();
+    display.setCursor(0,0);
+    display.println("subiendo datos");
+    display.display();
+
+
+    for (int y = 0; y < i; y++) {
+        display.print(">>");
+        display.display();
+        Serial.println(globalArray[y]); 
+
+        http.begin("http://192.168.137.1:8000/api/datos"); // Cambia por la URL de tu backend
+        http.addHeader("Content-Type", "application/json");
+        int httpResponseCode = http.POST(globalArray[y]);
+        
+        if (httpResponseCode > 0) {
+            Serial.println("Enviado: " + String(httpResponseCode));
+        } else {
+            Serial.println("Error en el envío");
+        }
+        http.end();
+        delay(1000); 
+    }
+
+    for (int y = 0; y < i; y++) {
+    Serial.println(globalArray[y]);  // Imprime cada elemento en el monitor serial
+    }
+    i=0;
+
+    display.println("**Listo, datos restablecidos**");
+    display.display();
+    delay(2000);
 }
 
 void ronda1(){
@@ -220,25 +286,7 @@ void loop() {
      ronda3();
      }else if(digitalRead(buttonPin4) == HIGH)
      {
-    display.setCursor(0, 0);
-    display.clearDisplay();
-    display.print("subiendo datos >");
-    for (int x = 0; x < 10; x++)
-    {
-    display.print(">>");
-    display.display();
-    delay(1000);
-    }
-
-    for (int y = 0; y < 10; y++) {
-    Serial.println(globalArray[y]);  // Imprime cada nombre en el monitor serial
-    }
-    i=0;
-
-     display.print("listo, datos restablecidos");
-    display.display();
-    delay(1000);
-    
+    enviarDatos();
     }else{
     display.clearDisplay();
     display.setCursor(0, 0);
@@ -259,6 +307,5 @@ void loop() {
      
 
 }
-
 
 
